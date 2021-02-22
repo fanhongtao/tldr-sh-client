@@ -8,6 +8,7 @@
 # Every time it caches, a big index file will be downloaded.
 # To reduce the download size, I change cache methods from `curl` to `git`.
 
+version="1.0"
 set -uf
 # next only works on some shells, check for support before trying to set the feature
 set -o | grep -q pipefail && set -o pipefail 2>/dev/null
@@ -265,6 +266,7 @@ USAGE: $cmd [options] <command>
     -l, --list:       show all available pages
     -p, --platform:   show page from specific platform rather than autodetecting
     -u, -c, --update: update, force retrieving latest copies of locally cached files
+    -v, --version:    show version number and quit
     -h, -?, --help:   this help overview
 
 <command>
@@ -275,6 +277,11 @@ $configdir . By default, the cached copies will expire in $cache_days days.
 
 EOF
 	exit 0
+}
+
+show_version() {
+	cmd=$(basename "$0")
+	echo "$cmd version $version  https://github.com/fanhongtao/tldr-sh-client"
 }
 
 while [ $# -gt 0 ]; do
@@ -290,6 +297,10 @@ while [ $# -gt 0 ]; do
 		;;
 	-u | -c | --cache | --update)
 		cache_tldr
+		exit 0
+		;;
+	-v | --version)
+		show_version
 		exit 0
 		;;
 	-h | -\? | --help | -*)
