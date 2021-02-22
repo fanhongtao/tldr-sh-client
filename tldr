@@ -2,6 +2,12 @@
 # tldr client by Ray Lee, http://github.com/raylee/tldr
 # a Sunday afternoon's project, I'm sure there's room for improvement. PRs welcome!
 
+# ----------------------
+# Updated by Fan Hongtao, https://github.com/fanhongtao/tldr-sh-client
+# Ray Lee's shell uses `curl` to cache `tldr` pages.
+# Every time it caches, a big index file will be downloaded.
+# To reduce the download size, I change cache methods from `curl` to `git`.
+
 set -uf
 # next only works on some shells, check for support before trying to set the feature
 set -o | grep -q pipefail && set -o pipefail 2>/dev/null
@@ -10,47 +16,55 @@ set -o | grep -q pipefail && set -o pipefail 2>/dev/null
 config() {
 	init_term_cmds
 
-	if [ -z "$(command -v curl)" ]; then
-		echo "${red}tldr requires \`curl\` installed in your path${reset}"
+	if [ -z "$(command -v git)" ]; then
+		echo "${red}tldr requires \`git\` installed in your path${reset}"
 		exit 1
 	fi
-	configdir=~/.tldr
-	[ -d ~/.config ] && configdir=~/.config/tldr
+
+	parentdir=~/.config/tldr2
+	if [ ! -d "$parentdir" ]; then
+		mkdir -p $parentdir
+	fi
+	configdir="$parentdir/tldr"
 
 	platform=$(get_platform)
-	base_url="https://raw.githubusercontent.com/tldr-pages/tldr/master/pages"
-	index_url="https://raw.githubusercontent.com/tldr-pages/tldr-pages.github.io/master/assets/index.json"
-	index="$configdir/index.json"
 	cache_days=14
 	force_update=''
+	last_cache_date_file=$parentdir/.lasted_cache_date
 
 	#check if config folder exists, otherwise create it
 	if [ ! -d "$configdir" ]; then
-		mkdir -p "$configdir"
-		cache_tldr
+		cd $parentdir
+		# if the environment variable TLDR_REPO is set, use this repo,
+		# otherwise use the official GitHub repo
+		tldr_repo=${TLDR_REPO:-https://github.com/tldr-pages/tldr.git}
+		git clone $tldr_repo
 	fi
 
-	[ ! -f $index ] && update_index
-	auto_update_index
+	cd $configdir
+	if [ ${TLDR_AUTO_UPDATE:-1} -eq 1 ]; then
+		auto_update
+	fi
 }
 
-update_index() {
-	curl -sf -o "$index" "$index_url"
-	res=$?
-	if [ $res -eq 22 ]; then
-		echo "Could not download index from $index_url"
-		exit 1
-	fi
+curr_date() {
+	echo `date +"%Y%m%d"`
 }
 
 # if the file exists and is more recent than $cache_days old
 recent() {
-	exists=$(find "$1" -mtime -$cache_days 2>/dev/null)
-	[ -n "$exists" -a -z "$force_update" ]
+	count=`git log --since=${cache_days}days | wc -l`
+	if [ -f $last_cache_date_file ]; then
+		cached_date=`cat $last_cache_date_file`
+	else
+		cached_date=`curr_date`
+	fi
+	last_date=`date -d "$cache_days days ago" "+%Y%m%d"`
+	[ $count -gt 0 -o  $last_date -lt  $cached_date ]
 }
 
-auto_update_index() {
-	recent "$index" || update_index
+auto_update() {
+	recent || cache_tldr
 }
 
 bname() {
@@ -140,7 +154,7 @@ text() {
 }
 
 contains() {
-	test "${1#*$2}" != "$1"
+	test -f "$configdir/pages/$1/$2.md"
 }
 
 trim() {
@@ -204,20 +218,10 @@ get_platform() {
 
 # extract the platform key from index.json, return preferred subpath to tldrpage
 path_for_cmd() {
-	override="$configdir/local/$1.md"
-	if [ -f "$override" ]; then
-		echo "local/$1.md"
-		return
-	fi
-
-	# results in, eg, "name":"netstat","platform":["linux","osx"]},
-	desc=$(tr '{' '\n' <$index | grep "\"name\":\"$1\"")
-	[ -z "$desc" ] && echo "-- not found --" && return
-
 	# use the platform specific version of the tldr first
-	if contains $desc "$platform"; then
+	if contains "$platform" $1; then
 		echo "$platform/$1.md"
-	elif contains $desc "common"; then
+	elif contains "common" $1; then
 		echo "common/$1.md"
 	else
 		# take the first one so we can show something, but warn the user
@@ -229,31 +233,22 @@ path_for_cmd() {
 
 # cache a local copy of the tldrpage
 cache_tldr() {
-	contains "$(tar --version | head -n 1)" bsdtar || taropt='--wildcards --overwrite'
-	curl -sfL https://github.com/tldr-pages/tldr/tarball/master |
-		tar xzf - --strip-components=2 -C "$configdir" ${taropt-} '*/pages/'
-	update_index
+	git pull > /dev/null
+	if [ $? ]; then
+		echo `curr_date` > $last_cache_date_file
+	fi
 }
 
 # return the local cached copy of the tldrpage, or retrieve and cache from github
 get_tldr() {
 	p=$(path_for_cmd "$1")
-	cached="$configdir/$p"
-	recent "$cached" || {
-		mkdir -p $(dirname "$cached")
-		curl -sf -o "$cached" "$base_url/$p"
-	}
-	# if the curl failed for some reason, keep cat from whinging
+	cached="$configdir/pages/$p"
 	cat "$cached" 2>/dev/null
 }
 
-fetch_tldr() {
-	curl -sf "$base_url/{$platform,common}/$1.md"
-}
-
 list_pages() {
-	for platform in $(ls "$configdir"); do
-		for page in $(ls 2>/dev/null "$configdir"/"$platform/"); do
+	for platform in $(ls "$configdir/pages"); do
+		for page in $(ls 2>/dev/null "$configdir"/pages/"$platform/"); do
 			bname "$page" .md
 		done
 	done | sort | uniq
@@ -289,9 +284,6 @@ while [ $# -gt 0 ]; do
 		list_pages
 		exit 0
 		;;
-	-n)
-		TLDR_CACHE=no
-		;;
 	-p | --platform)
 		shift
 		platform=$1
@@ -316,12 +308,7 @@ done
 
 [ -z "${page:-}" ] && usage
 
-# if the environment variable TLDR_CACHE=no then fetch the page directly from github, otherwise use the cache
-if [ "${TLDR_CACHE-unset}" = "no" ]; then
-	tldr=$(fetch_tldr "$page")
-else
-	tldr=$(get_tldr "$page")
-fi
+tldr=$(get_tldr "$page")
 
 if [ -z "$tldr" ]; then
 	echo "tldr page for command $page not found"

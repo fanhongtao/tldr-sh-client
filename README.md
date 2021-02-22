@@ -3,7 +3,7 @@
 A fully-functional POSIX shell client for [tldr](https://github.com/rprieto/tldr/).
 This version aims to be the easiest, smallest, and most universal client to set up
 on a new account, without sacrificing any features. It uses only `/bin/sh` features
-and `curl`, and tested on Linux, OSX, FreeBSD, with `bash`, `sh`, `dash`, `ksh`,
+and `git`, and tested on Linux, OSX, FreeBSD, with `bash`, `sh`, `dash`, `ksh`,
 `zsh`, `csh`.
 
 ![tldr screenshot](Screenshot.png?raw=true)
@@ -11,7 +11,7 @@ and `curl`, and tested on Linux, OSX, FreeBSD, with `bash`, `sh`, `dash`, `ksh`,
 ## Installation
 ```bash
 mkdir -p ~/bin
-curl -o ~/bin/tldr https://raw.githubusercontent.com/raylee/tldr/master/tldr
+curl -o ~/bin/tldr https://raw.githubusercontent.com/fanhongtao/tldr-sh-client/master/tldr
 chmod +x ~/bin/tldr
 ```
 
@@ -32,7 +32,7 @@ complete -W "$(tldr 2>/dev/null --list)" tldr
 
 ## Prerequisites
 
-`curl` needs to be available somewhere in your `$PATH`. The script is otherwise self-contained.
+`git` needs to be available somewhere in your `$PATH`. The script is otherwise self-contained.
 
 ## Usage
 ```
@@ -81,3 +81,17 @@ something I missed I'd love your help.
 * Find a bug? Open an issue please, or even better send me a pull request.
 
 Contributions are always welcome at any time!
+
+## Extra
+
+```bash
+export TLDR_REPO='https://github.com/tldr-pages/tldr.git'
+export TLDR_AUTO_UPDATE=1
+```
+
+* `TLDR_REPO` : Used to set to a `tldr` git repo.
+  * `https://github.com/tldr-pages/tldr.git`， **Default value.**
+  * `https://gitee.com/tldr-pages/tldr.git`.  Alterative value. If the access to GitHub is too slow, try this one.
+* `TLDR_AUTO_UPDATE` : If `tldr` will automatically update cached content.
+  * `1`, enable auto-update. **Default value.**
+  * `0`, disable auto-update. Can manually update by `tldr -u`.
