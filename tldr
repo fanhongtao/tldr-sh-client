@@ -266,6 +266,7 @@ USAGE: $cmd [options] <command>
     -l, --list:       show all available pages
     -p, --platform:   show page from specific platform rather than autodetecting
     -u, -c, --update: update, force retrieving latest copies of locally cached files
+    -m, --markdown:   show markdown page
     -v, --version:    show version number and quit
     -h, -?, --help:   this help overview
 
@@ -299,6 +300,9 @@ while [ $# -gt 0 ]; do
 		cache_tldr
 		exit 0
 		;;
+	-m | --markdown)
+		TLDR_MARKDOWN="yes"
+		;;
 	-v | --version)
 		show_version
 		exit 0
@@ -326,5 +330,9 @@ if [ -z "$tldr" ]; then
 	exit 1
 fi
 
-display_tldr "$tldr"
+if [ "${TLDR_MARKDOWN-unset}" = "yes" ]; then
+	echo "$tldr"
+else
+	display_tldr "$tldr"
+fi
 echo
