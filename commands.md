@@ -9,3 +9,5 @@
 `zip -r -{{9}} {{compressed.zip}} {{path/to/directory}}`
 `ab -n {{100}} {{url}}`
 `ack bar "{{[bB]ar \d+}}" {{path/to/file}}`
+`echo '{{3}}' | ajson '{{2 * pi * $}}'`
+

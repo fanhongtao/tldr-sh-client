@@ -1,6 +1,8 @@
 #!/bin/sh
 # Test code for parse command page's command.
 #set -x
+set -uf
+
 unquote() {
 	# take everything between two backticks, capture it
 	printf "%s\n" "$*" | sed "s/\`\([^\`]*\)\`/\1/g"
@@ -9,8 +11,7 @@ unquote() {
 # contains string substr
 # return: true, if `string` contains `substr`.
 contains() {
-	[ -z ${2:-} ] && { echo "true"; return; }
-	[ "${1#*$2*}" = "$1" ] && echo "false" || echo "true"
+	[ "${1#*${2:-}*}" = "$1" ] && echo "false" || echo "true"
 }
 
 # startswith string prefix
@@ -43,7 +44,7 @@ print_option() {
 print_value() {
 	# Delete first character of "$*", and check if the rest string contain $value_end_tag
 	# Beacuse value start with `'` or `"`, end tag is the same as start tag. So we should check after delete the first character.
-	if $(contains `echo "$*" | sed 's/.//'` $value_end_tag); then
+	if [ ${#value_end_tag} -gt 0 ] &&  $(contains `echo "$*" | sed 's/.//'` $value_end_tag); then
 		want_value=false
 	else
 		want_value=true
@@ -148,4 +149,5 @@ cat commands.md | while IFS= read -r line || [ -n "$line" ]; do
 	echo $line
 	code "$line"
 	echo
+#	exit
 done
