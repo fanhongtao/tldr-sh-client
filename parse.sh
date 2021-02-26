@@ -24,6 +24,22 @@ log() {
 	# echo $*
 }
 
+print_code() {
+	if $SHOW_TYPE; then
+		echo "code: $*"
+	else
+		printf "${scode}${*}${reset}"
+	fi
+}
+
+print_option() {
+	if $SHOW_TYPE; then
+		echo "option: $*"
+	else
+		printf "${sparam}${*}${reset}"
+	fi
+}
+
 print_value() {
 	# Delete first character of "$*", and check if the rest string contain $value_end_tag
 	# Beacuse value start with `'` or `"`, end tag is the same as start tag. So we should check after delete the first character.
@@ -32,9 +48,13 @@ print_value() {
 	else
 		want_value=true
 	fi
-	printf "${svalue}"
-	printf "%s" "$*" | sed "s/{{\(.*\)}}/\1/g"
-	printf "${reset}"
+	if $SHOW_TYPE; then
+		echo "value: $*"
+	else
+		printf "${svalue}"
+		printf "%s" "$*" | sed "s/{{\(.*\)}}/\1/g"
+		printf "${reset}"
+	fi
 	log "value_end_tag: $value_end_tag, want_value: $want_value"
 }
 
@@ -66,18 +86,18 @@ parse() {
 		-*) # option
 			if ! $(contains "$word" "="); then
 				if ! $(contains "$word" "{{"); then
-					printf "${sparam}${word}${reset}"
+					print_option "${word}"
 				else
 					option=${word%%{{*}
 					value="{{"${word##*{{}
-					printf "${sparam}${option}${reset}"
+					print_option "${option}"
 					value_end_tag="}}"
 					print_value "$value"
 				fi
 			else
 				option=${word%%=*}
 				value=${word##*=}
-				printf "${sparam}${option}=${reset}"
+				print_option "${option}="
 				if $(startswith $value "{{"); then
 					value_end_tag="}}"
 				elif $(startswith $value "'"); then
@@ -91,7 +111,7 @@ parse() {
 			fi
 			;;
 		*)
-			printf "${scode}${word}${reset}"
+			print_code "$word"
 			;;
 		esac
 	done
@@ -109,6 +129,16 @@ reset="\33[0m"
 scode="\33[31m" # red
 sparam="\33[33m"
 svalue="\33[36m"
+
+SHOW_TYPE=false
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-t | --type)
+			SHOW_TYPE=true
+			;;
+	esac
+	shift
+done
 
 # cat commands.md | while read line; do
 cat commands.md | while IFS= read -r line || [ -n "$line" ]; do
