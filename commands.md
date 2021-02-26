@@ -8,3 +8,4 @@
 `7z a {{encrypted.7z}} -p{{password}} -mhe=on {{archived.7z}}`
 `zip -r -{{9}} {{compressed.zip}} {{path/to/directory}}`
 `ab -n {{100}} {{url}}`
+`ack bar "{{[bB]ar \d+}}" {{path/to/file}}`

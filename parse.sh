@@ -52,7 +52,7 @@ print_value() {
 		echo "value: $*"
 	else
 		printf "${svalue}"
-		printf "%s" "$*" | sed "s/{{\(.*\)}}/\1/g"
+		printf "%s" "$*" | sed "s/{{//" | sed "s/}}//"
 		printf "${reset}"
 	fi
 	log "value_end_tag: $value_end_tag, want_value: $want_value"
