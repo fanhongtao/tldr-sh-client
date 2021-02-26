@@ -126,7 +126,7 @@ init_term_cmds() {
 	sdescription=$(style_for ${TLDR_DESCRIPTION:-reset})
 	scode=$(style_for ${TLDR_CODE:-bold})
 	sparam=$(style_for ${TLDR_PARAM:-italic})
-	eparam=$(style_for ${TLDR_EPARAM:-eitalic})
+	svalue=$(style_for ${TLDR_VALUE:-cyan})
 }
 
 heading() {
@@ -141,13 +141,99 @@ list_item() {
 	echo "${sdescription}$*$reset"
 }
 
-style_params() {
-	printf %s "$*" | sed "s/{{/${sparam}/g;s/}}/${eparam}/g"
+unquote() {
+	# take everything between two backticks, capture it
+	printf "%s\n" "$*" | sed "s/\`\([^\`]*\)\`/\1/g"
+}
+
+# contains string substr
+# return: true, if `string` contains `substr`.
+contains() {
+	[ -z $2 ] && { echo "true"; return; }
+	[ "${1#*$2*}" = "$1" ] && echo "false" || echo "true"
+}
+
+# startswith string prefix
+# return: true, if `string` start with `prefix`
+startswith() {
+	[ "$2${1#${2}}" = "$1" ] && echo "true" || echo "false"
+}
+
+log() {
+	printf ""
+	# echo $*
+}
+
+print_value() {
+	# Delete first character of "$*", and check if the rest string contain $value_end_tag
+	# Beacuse value start with `'` or `"`, end tag is the same as start tag. So we should check after delete the first character.
+	if $(contains `echo "$*" | sed 's/.//'` $value_end_tag); then
+		want_value=false
+	else
+		want_value=true
+	fi
+	printf "${svalue}"
+	printf "%s" "$*" | sed "s/{{\(.*\)}}/\1/g"
+	printf "${reset}"
+	log "value_end_tag: $value_end_tag, want_value: $want_value"
+}
+
+parse() {
+	value_end_tag=""
+	want_value=false
+	printf " "
+	for word in $*; do
+		printf " "
+		log "want_value: $want_value"
+		if $want_value; then
+			print_value "$word"
+			continue
+		fi
+
+		case "$word" in
+		\{\{*) # vlaue
+			value_end_tag="}}"
+			print_value "$word"
+			;;
+		\'*) # vlaue
+			value_end_tag="'"
+			print_value "$word"
+			;;
+		\"*) # vlaue
+			value_end_tag='"'
+			print_value "$word"
+			;;
+		-*) # option
+			new=`echo "$word" | sed "s/=//"`
+			if [ $new = $word  ]; then
+				printf "${sparam}${word}${reset}"
+			else
+				option=${word%%=*}
+				value=${word##*=}
+				printf "${sparam}${option}=${reset}"
+				if $(startswith $value "{{"); then
+					value_end_tag="}}"
+				elif $(startswith $value "'"); then
+					value_end_tag="'"
+				elif $(startswith $value '"'); then
+					value_end_tag='"'
+				else
+					value_end_tag=""
+				fi
+				print_value "$value"
+			fi
+			;;
+		*)
+			printf "${scode}${word}${reset}"
+			;;
+		esac
+	done
+	echo
 }
 
 code() {
-	# take everything between two backticks, capture it, surround it with styling
-	printf "%s\n" "$*" | sed "s/\`\([^\`]*\)\`/  ${scode}\1${reset}/g"
+	line=$(unquote "$line")
+	parse $line
 }
 
 text() {
@@ -172,7 +258,6 @@ trim() {
 display_tldr() {
 	last_token=''
 	page="$1"
-	page=$(style_params "$page")
 
 	# read one line at a time, don't strip whitespace ('IFS='), and process
 	# last line even if it doesn't have a newline at the end
