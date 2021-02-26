@@ -154,7 +154,7 @@ text() {
 	echo "$*"
 }
 
-contains() {
+contains_file() {
 	test -f "$configdir/pages/$1/$2.md"
 }
 
@@ -220,9 +220,9 @@ get_platform() {
 # extract the platform key from index.json, return preferred subpath to tldrpage
 path_for_cmd() {
 	# use the platform specific version of the tldr first
-	if contains "$platform" $1; then
+	if contains_file "$platform" $1; then
 		echo "$platform/$1.md"
-	elif contains "common" $1; then
+	elif contains_file "common" $1; then
 		echo "common/$1.md"
 	else
 		# take the first one so we can show something, but warn the user
