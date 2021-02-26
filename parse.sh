@@ -9,7 +9,7 @@ unquote() {
 # contains string substr
 # return: true, if `string` contains `substr`.
 contains() {
-	[ -z $2 ] && { echo "true"; return; }
+	[ -z ${2:-} ] && { echo "true"; return; }
 	[ "${1#*$2*}" = "$1" ] && echo "false" || echo "true"
 }
 
@@ -66,7 +66,15 @@ parse() {
 		-*) # option
 			new=`echo "$word" | sed "s/=//"`
 			if [ $new = $word  ]; then
-				printf "${sparam}${word}${reset}"
+				if ! $(contains "$word" "{{"); then
+					printf "${sparam}${word}${reset}"
+				else
+					option=${word%%{{*}
+					value="{{"${word##*{{}
+					printf "${sparam}${option}${reset}"
+					value_end_tag="}}"
+					print_value "$value"
+				fi
 			else
 				option=${word%%=*}
 				value=${word##*=}
