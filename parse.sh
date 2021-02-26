@@ -64,8 +64,7 @@ parse() {
 			print_value "$word"
 			;;
 		-*) # option
-			new=`echo "$word" | sed "s/=//"`
-			if [ $new = $word  ]; then
+			if ! $(contains "$word" "="); then
 				if ! $(contains "$word" "{{"); then
 					printf "${sparam}${word}${reset}"
 				else
