@@ -144,14 +144,10 @@ code() {
 	echo
 }
 
+SHOW_TYPE=false
+
 # --------------
 
-reset="\33[0m"
-scode="\33[31m" # red
-sparam="\33[33m"
-svalue="\33[36m"
-
-SHOW_TYPE=false
 while [ $# -gt 0 ]; do
 	case "$1" in
 		-t | --type)
@@ -160,6 +156,11 @@ while [ $# -gt 0 ]; do
 	esac
 	shift
 done
+
+reset="\33[0m"
+scode="\33[31m" # red
+sparam="\33[33m"
+svalue="\33[36m"
 
 # cat commands.md | while read line; do
 cat commands.md | while IFS= read -r line || [ -n "$line" ]; do
