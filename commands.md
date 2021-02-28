@@ -11,3 +11,6 @@
 `ack bar "{{[bB]ar \d+}}" {{path/to/file}}`
 `echo '{{3}}' | ajson '{{2 * pi * $}}'`
 
+`adb reverse tcp:{{remote_port}} tcp:{{local_port}}`
+`alias {{word}}="{{command}}"`
+`alias {{la}}="{{ls -a}}"`
