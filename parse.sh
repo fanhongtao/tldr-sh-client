@@ -71,7 +71,7 @@ print_value() {
 		echo "value: $*"
 	else
 		printf "${svalue}"
-		printf "%s" "$*" | sed "s/{{//" | sed "s/}}//"
+		printf "%s" "$*" | sed "s/{{//g" | sed "s/}}//g"
 		printf "${reset}"
 	fi
 }
