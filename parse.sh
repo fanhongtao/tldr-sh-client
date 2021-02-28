@@ -8,18 +8,6 @@ unquote() {
 	printf "%s\n" "$*" | sed "s/\`\([^\`]*\)\`/\1/g"
 }
 
-# contains string substr
-# return: true, if `string` contains `substr`.
-contains() {
-	[ "${1#*${2:-}*}" = "$1" ] && echo "false" || echo "true"
-}
-
-# startswith string prefix
-# return: true, if `string` start with `prefix`
-startswith() {
-	[ "$2${1#${2}}" = "$1" ] && echo "true" || echo "false"
-}
-
 # index_of string token [start]
 # return: index of `token` in `string`, from start . 0 means not exist.
 index_of() {
@@ -31,11 +19,6 @@ index_of() {
 	fi
 	prefix=${string%%${token}*}
 	echo ${#prefix}
-}
-
-log() {
-	printf ""
-	# echo $*
 }
 
 print_space() {
