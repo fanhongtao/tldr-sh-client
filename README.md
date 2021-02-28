@@ -2,9 +2,8 @@
 
 A fully-functional POSIX shell client for [tldr](https://github.com/rprieto/tldr/).
 This version aims to be the easiest, smallest, and most universal client to set up
-on a new account, without sacrificing any features. It uses only `/bin/sh` features
-and `git`, and tested on Linux, OSX, FreeBSD, with `bash`, `sh`, `dash`, `ksh`,
-`zsh`, `csh`.
+on a new account, without sacrificing any features. It uses only `/bin/bash` features
+and `git`, and tested on Linux, OSX, FreeBSD, with `bash`.
 
 ![tldr screenshot](Screenshot.png?raw=true)
 
@@ -42,6 +41,8 @@ tldr [options] command
 	-l, --list:      show all available pages
 	-p, --platform:  show page from specific platform rather than autodetecting
 	-u, --update:    update, force retrieving latest copies of index and <command>
+	-m, --markdown:  show markdown page
+	-v, --version:   show version number and quit
 	-h, -?, --help:  this help overview
 
 command
@@ -95,3 +96,52 @@ export TLDR_AUTO_UPDATE=1
 * `TLDR_AUTO_UPDATE` : If `tldr` will automatically update cached content.
   * `1`, enable auto-update. **Default value.**
   * `0`, disable auto-update. Can manually update by `tldr -u`.
+
+
+# How to test
+
+There are some test suggestions.
+
+## Show markdown
+
+Use `tldr -m` to show the original markdown.
+
+The fellowing command shows markdown of `sleep`
+
+```bash
+./tldr -m sleep
+```
+
+## Change code for parse in `parse.sh`
+
+File [parse.sh](parse.sh) is used to parse commands in [commands.md](commands.md).
+
+Before change, execute the fellowing command to write parse result into file `p1.txt`
+
+```bash
+./parse.sh -t > p1.txt
+```
+
+After change, write result into `p2.txt`
+
+```bash
+./parse.sh -t > p2.txt
+```
+
+And use `diff` to compare the results.
+
+```bash
+diff p1.txt p2.txt
+```
+
+Finally, merge code into [tldr](tldr).
+
+## View by `view-commands.sh`
+
+Use [view-commands.sh](view-commands.sh) to view commands one by one.
+
+```bash
+./tldr -l > list.txt   	         # Generate command list file
+./view-commands.sh list.txt      # View command from the first
+./view-commands.sh list.txt  bc  # View command from 'bc'
+```
