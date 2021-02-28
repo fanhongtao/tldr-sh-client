@@ -15,3 +15,4 @@
 `alias {{word}}="{{command}}"`
 `alias {{la}}="{{ls -a}}"`
 `alex *.md !{{example.md}}`
+`ansible-doc --type {{plugin_type}} --list`

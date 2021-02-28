@@ -102,7 +102,7 @@ get_code() {
 	local word=""
 	while [ ${#line} -gt 0 ]; do
 		local ch=${line:0:1}
-		if echo "$ch" | grep -q '[^a-zA-Z0-9]'; then
+		if echo "$ch" | grep -q '[^a-zA-Z0-9-]'; then
 			break
 		fi
 		word="${word}${ch}"
