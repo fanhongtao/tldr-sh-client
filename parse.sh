@@ -116,17 +116,17 @@ code() {
 	printf "  "
 	while [ ${#line} -gt 0 ]; do
 		ch=${line:0:1}
-		if [ "$ch" = " " -o "$ch" = "\t" ]; then
+		if [ "x$ch" = "x " -o "x$ch" = "x\t" ]; then
 			line=${line:1}
 			print_space
 			continue
 		fi
 
 		two=${line:0:2}
-		if [ "$ch" = "-" ]; then
+		if [ "x$ch" = "x-" ]; then
 			word=$(get_option)
 			print_option "${word}"
-		elif [ "$ch" = "'" -o "$ch" = '"' ]; then
+		elif [ "x$ch" = "x'" -o "x$ch" = 'x"' ]; then
 			word=$(get_value $ch)
 			print_value "${word}"
 		elif [ "$two" = "{{" ]; then

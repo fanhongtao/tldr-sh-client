@@ -14,3 +14,4 @@
 `adb reverse tcp:{{remote_port}} tcp:{{local_port}}`
 `alias {{word}}="{{command}}"`
 `alias {{la}}="{{ls -a}}"`
+`alex *.md !{{example.md}}`
